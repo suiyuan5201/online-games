@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://game-site.netlify.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://game-site.netlify.app/games/snake.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/tetris.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/2048.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/minesweeper.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/gomoku.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/memory.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/breakout.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/flappy.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/tictactoe.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/slide-puzzle.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/pong.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/color-reaction.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/typing-game.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/sudoku.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/jump.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://game-site.netlify.app/games/guess-number.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/snake.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/tetris.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/2048.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/minesweeper.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/gomoku.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/memory.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/breakout.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/flappy.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/tictactoe.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/slide-puzzle.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/pong.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/color-reaction.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/typing-game.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/sudoku.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/jump.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://splendid-mochi-589882.netlify.app/games/guess-number.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>
