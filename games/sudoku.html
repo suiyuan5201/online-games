@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>数独 Sudoku - 免费在线游戏</title>
+  <meta name="description" content="免费在线数独游戏，三种难度，经典9x9。Free online Sudoku puzzle.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+  .sudoku-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:0;max-width:360px;margin:0 auto;border:3px solid #333;border-radius:4px}
+  .sudoku-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;border:1px solid #ccc;cursor:pointer;transition:background .1s;user-select:none}
+  .sudoku-cell:nth-child(3n){border-right:2px solid #333}
+  .sudoku-cell:nth-child(n+19):nth-child(-n+27){border-bottom:2px solid #333}
+  .sudoku-cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid #333}
+  .sudoku-cell.fixed{color:#1e293b;background:#f8fafc}
+  .sudoku-cell.user{color:var(--primary);background:#fff}
+  .sudoku-cell.selected{background:#e0e7ff!important}
+  .sudoku-cell.error{color:#ef4444;background:#fee2e2!important}
+  .sudoku-cell.highlight{background:#f0fdf4!important}
+  .num-pad{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:15px}
+  .num-btn{width:40px;height:40px;border-radius:8px;border:2px solid var(--border);background:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;color:var(--primary)}
+  .num-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .diff-btns{display:flex;gap:8px;justify-content:center;margin-bottom:15px}
+  </style>
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">9️⃣ 数独 Sudoku</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">填入1-9，每行每列每宫不重复 | Fill 1-9, no repeats in row/col/box</p>
+    <div class="game-container">
+      <div class="diff-btns">
+        <button class="btn btn-sm" onclick="newGame(35)">简单 Easy</button>
+        <button class="btn btn-sm btn-outline" onclick="newGame(28)">中等 Medium</button>
+        <button class="btn btn-sm btn-outline" onclick="newGame(22)">困难 Hard</button>
+      </div>
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="timer">0:00</div><div class="label">用时 Time</div></div>
+        <div class="score-item"><div class="value" id="errors">0</div><div class="label">错误 Errors</div></div>
+      </div>
+      <div class="sudoku-grid" id="grid"></div>
+      <div class="num-pad" id="numPad">
+        <button class="num-btn" onclick="enterNum(1)">1</button>
+        <button class="num-btn" onclick="enterNum(2)">2</button>
+        <button class="num-btn" onclick="enterNum(3)">3</button>
+        <button class="num-btn" onclick="enterNum(4)">4</button>
+        <button class="num-btn" onclick="enterNum(5)">5</button>
+        <button class="num-btn" onclick="enterNum(6)">6</button>
+        <button class="num-btn" onclick="enterNum(7)">7</button>
+        <button class="num-btn" onclick="enterNum(8)">8</button>
+        <button class="num-btn" onclick="enterNum(9)">9</button>
+        <button class="num-btn" onclick="enterNum(0)" style="color:#ef4444">✕</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  let solution,puzzle,userGrid,selected=-1,errors=0,timerInterval,seconds=0;
+
+  function generateSudoku(){
+    // Generate a valid completed sudoku using backtracking
+    const grid=Array.from({length:9},()=>Array(9).fill(0));
+    fillGrid(grid);
+    return grid;
+  }
+
+  function fillGrid(grid){
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+      if(grid[r][c]===0){
+        const nums=shuffle([1,2,3,4,5,6,7,8,9]);
+        for(const n of nums){
+          if(isValid(grid,r,c,n)){grid[r][c]=n;if(fillGrid(grid))return true;grid[r][c]=0;}
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function isValid(grid,row,col,num){
+    for(let i=0;i<9;i++){if(grid[row][i]===num||grid[i][col]===num)return false;}
+    const br=Math.floor(row/3)*3,bc=Math.floor(col/3)*3;
+    for(let r=br;r<br+3;r++)for(let c=bc;c<bc+3;c++)if(grid[r][c]===num)return false;
+    return true;
+  }
+
+  function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+  function newGame(clues){
+    clearInterval(timerInterval);seconds=0;errors=0;
+    document.getElementById('timer').textContent='0:00';
+    document.getElementById('errors').textContent='0';
+    solution=generateSudoku();
+    puzzle=solution.map(r=>[...r]);
+    // Remove cells
+    let toRemove=81-clues;
+    const positions=shuffle([...Array(81).keys()]);
+    for(let i=0;i<toRemove;i++)puzzle[Math.floor(positions[i]/9)][positions[i]%9]=0;
+    userGrid=puzzle.map(r=>[...r]);
+    selected=-1;
+    timerInterval=setInterval(()=>{seconds++;const m=Math.floor(seconds/60);const s=seconds%60;document.getElementById('timer').textContent=m+':'+(s<10?'0':'')+s;},1000);
+    render();
+  }
+
+  function render(){
+    const grid=document.getElementById('grid');
+    let html='';
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+      const idx=r*9+c;
+      const val=userGrid[r][c];
+      const isFixed=puzzle[r][c]!==0;
+      const isSelected=idx===selected;
+      const isError=val&&val!==solution[r][c];
+      let cls='sudoku-cell';
+      if(isFixed)cls+=' fixed';else cls+=' user';
+      if(isSelected)cls+=' selected';
+      if(isError)cls+=' error';
+      html+=`<div class="${cls}" onclick="selectCell(${idx})">${val||''}</div>`;
+    }
+    grid.innerHTML=html;
+  }
+
+  function selectCell(idx){
+    const r=Math.floor(idx/9),c=idx%9;
+    if(puzzle[r][c]!==0)return; // fixed cell
+    selected=idx;render();
+  }
+
+  function enterNum(n){
+    if(selected===-1)return;
+    const r=Math.floor(selected/9),c=selected%9;
+    if(puzzle[r][c]!==0)return;
+    userGrid[r][c]=n;
+    if(n&&n!==solution[r][c]){errors++;document.getElementById('errors').textContent=errors;}
+    render();
+    // check win
+    if(userGrid.flat().every((v,i)=>v===solution[Math.floor(i/9)][i%9])){
+      clearInterval(timerInterval);
+      setTimeout(()=>alert('🎉 恭喜完成数独！用时 '+document.getElementById('timer').textContent),200);
+    }
+  }
+
+  document.addEventListener('keydown',e=>{
+    const n=parseInt(e.key);
+    if(n>=1&&n<=9)enterNum(n);
+    if(e.key==='Backspace'||e.key==='Delete')enterNum(0);
+  });
+
+  newGame(35);
+  </script>
+</body>
+</html>

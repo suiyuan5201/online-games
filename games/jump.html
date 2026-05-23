@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>跳跃方块 Jump - 免费在线游戏</title>
+  <meta name="description" content="免费在线跳跃方块游戏，点击跳跃躲避障碍。Free online jump game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🟩 跳跃方块 Jump</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">点击/按空格跳跃，躲避障碍物 | Click or Space to jump</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="score">0</div><div class="label">得分 Score</div></div>
+        <div class="score-item"><div class="value" id="best">0</div><div class="label">最高 Best</div></div>
+      </div>
+      <canvas id="game" width="600" height="250"></canvas>
+      <div class="game-controls">
+        <button class="btn" id="startBtn" onclick="startGame()">🎮 开始游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+  const GROUND=cv.height-40,GRAVITY=0.8,JUMP_FORCE=-14;
+  let player,obstacles,score,speed,animId,running=false,spawnTimer=0;
+  let best=+(localStorage.getItem('jump_best')||0);
+  document.getElementById('best').textContent=best;
+
+  function init(){
+    player={x:60,y:GROUND-40,w:30,h:40,vy:0,jumping:false};
+    obstacles=[];score=0;speed=5;spawnTimer=0;
+    document.getElementById('score').textContent=0;
+  }
+
+  function jump(){
+    if(!player.jumping){player.vy=JUMP_FORCE;player.jumping=true;}
+  }
+
+  function draw(){
+    // sky gradient
+    const grad=ctx.createLinearGradient(0,0,0,cv.height);
+    grad.addColorStop(0,'#87ceeb');grad.addColorStop(1,'#e8f4fd');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,cv.width,cv.height);
+    // ground
+    ctx.fillStyle='#8bc34a';ctx.fillRect(0,GROUND,cv.width,cv.height-GROUND);
+    ctx.fillStyle='#689f38';ctx.fillRect(0,GROUND,cv.width,4);
+    // player
+    ctx.fillStyle='#6366f1';
+    ctx.fillRect(player.x,player.y,player.w,player.h);
+    ctx.fillStyle='rgba(255,255,255,.3)';
+    ctx.fillRect(player.x,player.y,player.w,8);
+    // eyes
+    ctx.fillStyle='#fff';ctx.fillRect(player.x+18,player.y+10,8,8);
+    ctx.fillStyle='#333';ctx.fillRect(player.x+22,player.y+12,4,4);
+    // obstacles
+    obstacles.forEach(o=>{
+      if(o.type==='cactus'){
+        ctx.fillStyle='#4caf50';
+        ctx.fillRect(o.x,o.y,o.w,o.h);
+        ctx.fillRect(o.x-5,o.y+10,5,15);
+        ctx.fillRect(o.x+o.w,o.y+15,5,12);
+      }else{
+        ctx.fillStyle='#ef4444';
+        ctx.fillRect(o.x,o.y,o.w,o.h);
+        ctx.fillStyle='rgba(255,255,255,.2)';
+        ctx.fillRect(o.x,o.y,o.w,4);
+      }
+    });
+    // score
+    ctx.fillStyle='rgba(0,0,0,.3)';ctx.font='bold 20px sans-serif';ctx.textAlign='right';
+    ctx.fillText('Score: '+score,cv.width-20,30);ctx.textAlign='start';
+  }
+
+  function update(){
+    if(!running)return;
+    // player physics
+    player.vy+=GRAVITY;
+    player.y+=player.vy;
+    if(player.y>=GROUND-player.h){player.y=GROUND-player.h;player.vy=0;player.jumping=false;}
+    // obstacles
+    spawnTimer++;
+    const spawnRate=Math.max(40,90-score*0.5);
+    if(spawnTimer>=spawnRate){
+      spawnTimer=0;
+      const type=Math.random()>0.5?'cactus':'block';
+      const h=type==='cactus'?30+Math.random()*20:20+Math.random()*15;
+      const w=type==='cactus'?15:20+Math.random()*20;
+      obstacles.push({x:cv.width,y:GROUND-h,w,h,type});
+    }
+    obstacles.forEach(o=>o.x-=speed);
+    obstacles=obstacles.filter(o=>o.x+o.w>0);
+    // collision
+    const hit=obstacles.some(o=>
+      player.x+player.w>o.x&&player.x<o.x+o.w&&
+      player.y+player.h>o.y&&player.y<o.y+o.h
+    );
+    if(hit){gameOver();return;}
+    // scoring
+    score++;document.getElementById('score').textContent=Math.floor(score/10);
+    if(score%200===0)speed+=0.3;
+
+    draw();
+    animId=requestAnimationFrame(update);
+  }
+
+  function startGame(){
+    cancelAnimationFrame(animId);
+    init();running=true;
+    animId=requestAnimationFrame(update);
+    document.getElementById('startBtn').textContent='🔄 重新开始';
+  }
+
+  function gameOver(){
+    running=false;cancelAnimationFrame(animId);
+    const finalScore=Math.floor(score/10);
+    if(finalScore>best){best=finalScore;localStorage.setItem('jump_best',best);document.getElementById('best').textContent=best;}
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#fff';ctx.font='bold 28px sans-serif';ctx.textAlign='center';
+    ctx.fillText('Game Over!',cv.width/2,cv.height/2-15);
+    ctx.font='16px sans-serif';ctx.fillText('得分: '+finalScore+'  最高: '+best,cv.width/2,cv.height/2+20);
+    ctx.textAlign='start';
+  }
+
+  cv.addEventListener('click',()=>{if(running)jump();});
+  document.addEventListener('keydown',e=>{
+    if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();if(running)jump();else startGame();}
+  });
+
+  init();draw();
+  </script>
+</body>
+</html>

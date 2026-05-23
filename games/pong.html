@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>弹球 Pong - 免费在线游戏</title>
+  <meta name="description" content="免费在线弹球Pong游戏，经典对战。Free online Pong game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🏓 弹球 Pong</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">鼠标/触屏移动挡板，对战AI | Move paddle vs AI</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="playerScore">0</div><div class="label">你 You</div></div>
+        <div class="score-item"><div class="value" id="aiScore">0</div><div class="label">AI</div></div>
+      </div>
+      <canvas id="game" width="480" height="360"></canvas>
+      <div class="game-controls">
+        <button class="btn" onclick="startGame()">🎮 开始游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+  const PW=10,PH=70,BALL_R=8;
+  let player,ai,ball,playerScore=0,aiScore=0,animId,running=false;
+
+  function init(){
+    player={x:20,y:cv.height/2-PH/2};
+    ai={x:cv.width-20-PW,y:cv.height/2-PH/2};
+    ball={x:cv.width/2,y:cv.height/2,dx:4,dy:3};
+  }
+
+  function draw(){
+    ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,cv.width,cv.height);
+    // center line
+    ctx.setLineDash([8,8]);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.beginPath();
+    ctx.moveTo(cv.width/2,0);ctx.lineTo(cv.width/2,cv.height);ctx.stroke();ctx.setLineDash([]);
+    // paddles
+    ctx.fillStyle='#10b981';ctx.fillRect(player.x,player.y,PW,PH);
+    ctx.fillStyle='#ef4444';ctx.fillRect(ai.x,ai.y,PW,PH);
+    // ball
+    ctx.beginPath();ctx.arc(ball.x,ball.y,BALL_R,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+    // scores
+    ctx.font='bold 48px sans-serif';ctx.fillStyle='rgba(255,255,255,.15)';ctx.textAlign='center';
+    ctx.fillText(playerScore,cv.width/4,70);ctx.fillText(aiScore,cv.width*3/4,70);
+  }
+
+  function update(){
+    // ball move
+    ball.x+=ball.dx;ball.y+=ball.dy;
+    // top/bottom bounce
+    if(ball.y-BALL_R<=0||ball.y+BALL_R>=cv.height)ball.dy=-ball.dy;
+    // paddle collision
+    if(ball.x-BALL_R<=player.x+PW&&ball.y>=player.y&&ball.y<=player.y+PH&&ball.dx<0){
+      ball.dx=-ball.dx*1.05;ball.dy+=((ball.y-(player.y+PH/2))/PH)*4;
+    }
+    if(ball.x+BALL_R>=ai.x&&ball.y>=ai.y&&ball.y<=ai.y+PH&&ball.dx>0){
+      ball.dx=-ball.dx*1.05;ball.dy+=((ball.y-(ai.y+PH/2))/PH)*4;
+    }
+    // speed limit
+    if(Math.abs(ball.dx)>12)ball.dx=12*Math.sign(ball.dx);
+    if(Math.abs(ball.dy)>8)ball.dy=8*Math.sign(ball.dy);
+    // scoring
+    if(ball.x<0){aiScore++;document.getElementById('aiScore').textContent=aiScore;resetBall();}
+    if(ball.x>cv.width){playerScore++;document.getElementById('playerScore').textContent=playerScore;resetBall();}
+    // AI movement
+    const aiCenter=ai.y+PH/2;
+    const diff=ball.y-aiCenter;
+    if(Math.abs(diff)>10)ai.y+=diff*0.06;
+    ai.y=Math.max(0,Math.min(cv.height-PH,ai.y));
+
+    draw();
+    animId=requestAnimationFrame(update);
+  }
+
+  function resetBall(){
+    ball.x=cv.width/2;ball.y=cv.height/2;
+    ball.dx=(Math.random()>0.5?4:-4);ball.dy=(Math.random()-0.5)*6;
+  }
+
+  function startGame(){
+    cancelAnimationFrame(animId);
+    playerScore=0;aiScore=0;
+    document.getElementById('playerScore').textContent=0;
+    document.getElementById('aiScore').textContent=0;
+    init();running=true;
+    animId=requestAnimationFrame(update);
+  }
+
+  cv.addEventListener('mousemove',e=>{
+    const rect=cv.getBoundingClientRect();
+    player.y=Math.max(0,Math.min(cv.height-PH,(e.clientY-rect.top)*(cv.height/rect.height)-PH/2));
+  });
+  cv.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    const rect=cv.getBoundingClientRect();
+    player.y=Math.max(0,Math.min(cv.height-PH,(e.touches[0].clientY-rect.top)*(cv.height/rect.height)-PH/2));
+  },{passive:false});
+
+  init();draw();
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>飞翔小鸟 Flappy Bird - 免费在线游戏</title>
+  <meta name="description" content="免费在线飞翔小鸟游戏，点击屏幕让小鸟飞翔。Free online Flappy Bird game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🐦 飞翔小鸟 Flappy Bird</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">点击/按空格让小鸟飞翔 | Click or Space to flap</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="score">0</div><div class="label">得分 Score</div></div>
+        <div class="score-item"><div class="value" id="best">0</div><div class="label">最高 Best</div></div>
+      </div>
+      <canvas id="game" width="400" height="500"></canvas>
+      <div class="game-controls">
+        <button class="btn" id="startBtn" onclick="startGame()">🎮 开始游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+  let bird,pipes,score,gameActive,animId,gravity=0.4,flapForce=-7,pipeGap=140,pipeWidth=52,pipeSpeed=2.5;
+  let best=+(localStorage.getItem('flappy_best')||0);
+  document.getElementById('best').textContent=best;
+
+  function init(){
+    bird={x:80,y:cv.height/2,vy:0,r:15};
+    pipes=[];score=0;gameActive=false;
+    document.getElementById('score').textContent=0;
+    draw();
+  }
+
+  function addPipe(){
+    const minH=60,maxH=cv.height-pipeGap-60;
+    const topH=Math.floor(Math.random()*(maxH-minH))+minH;
+    pipes.push({x:cv.width,topH:topH,passed:false});
+  }
+
+  function flap(){
+    if(!gameActive){gameActive=true;animId=requestAnimationFrame(loop);addPipe();}
+    bird.vy=flapForce;
+  }
+
+  function draw(){
+    // sky
+    const grad=ctx.createLinearGradient(0,0,0,cv.height);
+    grad.addColorStop(0,'#87ceeb');grad.addColorStop(1,'#e0f7fa');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,cv.width,cv.height);
+    // ground
+    ctx.fillStyle='#8bc34a';ctx.fillRect(0,cv.height-40,cv.width,40);
+    ctx.fillStyle='#689f38';ctx.fillRect(0,cv.height-40,cv.width,5);
+    // pipes
+    pipes.forEach(p=>{
+      // top pipe
+      ctx.fillStyle='#4caf50';ctx.fillRect(p.x,0,pipeWidth,p.topH);
+      ctx.fillStyle='#388e3c';ctx.fillRect(p.x-3,p.topH-20,pipeWidth+6,20);
+      // bottom pipe
+      const bottomY=p.topH+pipeGap;
+      ctx.fillStyle='#4caf50';ctx.fillRect(p.x,bottomY,pipeWidth,cv.height-bottomY-40);
+      ctx.fillStyle='#388e3c';ctx.fillRect(p.x-3,bottomY,pipeWidth+6,20);
+    });
+    // bird
+    ctx.save();ctx.translate(bird.x,bird.y);
+    const angle=Math.min(bird.vy*3,30)*Math.PI/180;
+    ctx.rotate(angle);
+    ctx.fillStyle='#ffc107';
+    ctx.beginPath();ctx.ellipse(0,0,bird.r,bird.r*0.8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(5,-3,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#333';ctx.beginPath();ctx.arc(6,-3,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff5722';
+    ctx.beginPath();ctx.moveTo(bird.r,0);ctx.lineTo(bird.r+8,-3);ctx.lineTo(bird.r+8,3);ctx.closePath();ctx.fill();
+    ctx.restore();
+    // score display
+    ctx.fillStyle='#fff';ctx.font='bold 36px sans-serif';ctx.textAlign='center';
+    ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=3;
+    ctx.strokeText(score,cv.width/2,50);ctx.fillText(score,cv.width/2,50);
+  }
+
+  function loop(){
+    // physics
+    bird.vy+=gravity;bird.y+=bird.vy;
+    // pipes
+    if(pipes.length===0||pipes[pipes.length-1].x<cv.width-200)addPipe();
+    pipes.forEach(p=>{
+      p.x-=pipeSpeed;
+      if(!p.passed&&p.x+pipeWidth<bird.x){p.passed=true;score++;document.getElementById('score').textContent=score;}
+    });
+    pipes=pipes.filter(p=>p.x+pipeWidth>0);
+    // collision
+    const hit=pipes.some(p=>{
+      if(bird.x+bird.r>p.x&&bird.x-bird.r<p.x+pipeWidth){
+        if(bird.y-bird.r<p.topH||bird.y+bird.r>p.topH+pipeGap)return true;
+      }
+      return false;
+    });
+    if(hit||bird.y+bird.r>cv.height-40||bird.y-bird.r<0){gameOver();return;}
+    draw();
+    animId=requestAnimationFrame(loop);
+  }
+
+  function gameOver(){
+    cancelAnimationFrame(animId);gameActive=false;
+    if(score>best){best=score;localStorage.setItem('flappy_best',best);document.getElementById('best').textContent=best;}
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#fff';ctx.font='bold 32px sans-serif';ctx.textAlign='center';
+    ctx.fillText('Game Over!',cv.width/2,cv.height/2-20);
+    ctx.font='18px sans-serif';ctx.fillText('得分: '+score+'  最高: '+best,cv.width/2,cv.height/2+20);
+  }
+
+  function startGame(){init();flap();document.getElementById('startBtn').textContent='🔄 重新开始';}
+
+  cv.addEventListener('click',()=>{if(gameActive)flap();});
+  document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();if(gameActive)flap();else startGame();}});
+
+  init();
+  </script>
+</body>
+</html>

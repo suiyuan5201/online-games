@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>猜数字 Guess Number - 免费在线游戏</title>
+  <meta name="description" content="免费在线猜数字游戏，猜1-100之间的数字。Free online number guessing game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+  .guess-display{font-size:4em;font-weight:700;color:var(--primary);margin:20px 0}
+  .guess-input{display:flex;gap:10px;justify-content:center;align-items:center;margin:20px 0}
+  .guess-input input{width:120px;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:24px;text-align:center;outline:none;font-weight:700}
+  .guess-input input:focus{border-color:var(--primary)}
+  .hint{font-size:1.2em;padding:12px 24px;border-radius:10px;margin:15px 0;font-weight:600}
+  .hint.high{background:#fee2e2;color:#991b1b}
+  .hint.low{background:#dbeafe;color:#1e40af}
+  .hint.correct{background:#dcfce7;color:#166534}
+  .history-bar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:15px}
+  .history-num{padding:4px 10px;border-radius:15px;font-size:12px;font-weight:600}
+  .history-num.high{background:#fee2e2;color:#ef4444}
+  .history-num.low{background:#dbeafe;color:#3b82f6}
+  </style>
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🔮 猜数字 Guess the Number</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">猜一个1-100之间的数字 | Guess a number between 1 and 100</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="attempts">0</div><div class="label">次数 Tries</div></div>
+        <div class="score-item"><div class="value" id="bestScore">-</div><div class="label">最佳 Best</div></div>
+        <div class="score-item"><div class="value" id="wins">0</div><div class="label">胜场 Wins</div></div>
+      </div>
+      <div class="guess-display" id="display">?</div>
+      <div id="hintBox"></div>
+      <div class="guess-input">
+        <input type="number" id="guessInput" min="1" max="100" placeholder="1-100" onkeydown="if(event.key==='Enter')makeGuess()">
+        <button class="btn" onclick="makeGuess()">猜！Guess</button>
+      </div>
+      <div class="history-bar" id="history"></div>
+      <div class="game-controls" style="margin-top:15px">
+        <button class="btn btn-outline" onclick="newGame()">🔄 新一轮</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  let target,attempts,gameActive,guessHistory,wins=+(localStorage.getItem('guess_wins')||0);
+  const bestVal=localStorage.getItem('guess_best');
+  document.getElementById('wins').textContent=wins;
+  if(bestVal)document.getElementById('bestScore').textContent=bestVal+'次';
+
+  function newGame(){
+    target=Math.floor(Math.random()*100)+1;
+    attempts=0;gameActive=true;guessHistory=[];
+    document.getElementById('attempts').textContent='0';
+    document.getElementById('display').textContent='?';
+    document.getElementById('display').style.color='var(--primary)';
+    document.getElementById('hintBox').innerHTML='<div class="hint" style="background:#f8fafc;color:var(--text-light)">输入一个数字开始猜！Enter a number to start!</div>';
+    document.getElementById('history').innerHTML='';
+    document.getElementById('guessInput').value='';
+    document.getElementById('guessInput').focus();
+  }
+
+  function makeGuess(){
+    if(!gameActive)return;
+    const input=document.getElementById('guessInput');
+    const guess=parseInt(input.value);
+    if(isNaN(guess)||guess<1||guess>100){input.value='';return;}
+    attempts++;
+    document.getElementById('attempts').textContent=attempts;
+    document.getElementById('display').textContent=guess;
+    input.value='';
+
+    if(guess===target){
+      gameActive=false;
+      document.getElementById('display').style.color='#10b981';
+      document.getElementById('hintBox').innerHTML='<div class="hint correct">🎉 恭喜！答案就是 '+target+'！用了 '+attempts+' 次</div>';
+      wins++;localStorage.setItem('guess_wins',wins);document.getElementById('wins').textContent=wins;
+      const prevBest=localStorage.getItem('guess_best');
+      if(!prevBest||attempts<parseInt(prevBest)){localStorage.setItem('guess_best',attempts);document.getElementById('bestScore').textContent=attempts+'次';}
+      guessHistory.push({num:guess,type:'correct'});
+    }else if(guess>target){
+      document.getElementById('display').style.color='#ef4444';
+      document.getElementById('hintBox').innerHTML='<div class="hint high">📈 太大了！往小猜 | Too high! Go lower.</div>';
+      guessHistory.push({num:guess,type:'high'});
+    }else{
+      document.getElementById('display').style.color='#3b82f6';
+      document.getElementById('hintBox').innerHTML='<div class="hint low">📉 太小了！往大猜 | Too low! Go higher.</div>';
+      guessHistory.push({num:guess,type:'low'});
+    }
+
+    document.getElementById('history').innerHTML=guessHistory.map(g=>
+      `<span class="history-num ${g.type}">${g.num}</span>`
+    ).join('');
+    input.focus();
+  }
+
+  newGame();
+  </script>
+</body>
+</html>

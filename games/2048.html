@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>2048 - 免费在线游戏</title>
+  <meta name="description" content="免费在线2048游戏，滑动合并数字，挑战最高分！Free online 2048 game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+  .grid-2048{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:#bbada0;padding:10px;border-radius:10px;max-width:380px;margin:0 auto}
+  .tile{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:700;border-radius:6px;font-size:28px;transition:all .1s}
+  .t0{background:#cdc1b4;color:transparent}
+  .t2{background:#eee4da;color:#776e65}
+  .t4{background:#ede0c8;color:#776e65}
+  .t8{background:#f2b179;color:#fff}
+  .t16{background:#f59563;color:#fff}
+  .t32{background:#f67c5f;color:#fff}
+  .t64{background:#f65e3b;color:#fff}
+  .t128{background:#edcf72;color:#fff;font-size:24px}
+  .t256{background:#edcc61;color:#fff;font-size:24px}
+  .t512{background:#edc850;color:#fff;font-size:24px}
+  .t1024{background:#edc53f;color:#fff;font-size:20px}
+  .t2048{background:#edc22e;color:#fff;font-size:20px}
+  .tbig{background:#3c3a32;color:#fff;font-size:18px}
+  @media(max-width:500px){.tile{font-size:20px}.t128,.t256,.t512{font-size:18px}.t1024,.t2048,.tbig{font-size:14px}}
+  </style>
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🔢 2048</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">滑动合并相同数字 | Swipe to merge numbers</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="score">0</div><div class="label">得分 Score</div></div>
+        <div class="score-item"><div class="value" id="best">0</div><div class="label">最高 Best</div></div>
+      </div>
+      <div class="grid-2048" id="grid"></div>
+      <div class="game-controls" style="margin-top:15px">
+        <button class="btn" onclick="initGame()">🔄 新游戏</button>
+      </div>
+      <div class="mobile-controls">
+        <button class="mobile-btn" onclick="move('up')">⬆️</button>
+      </div>
+      <div class="mobile-controls" style="display:flex;gap:40px">
+        <button class="mobile-btn" onclick="move('left')">⬅️</button>
+        <button class="mobile-btn" onclick="move('down')">⬇️</button>
+        <button class="mobile-btn" onclick="move('right')">➡️</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  let grid,score,best=+(localStorage.getItem('2048_best')||0);
+  document.getElementById('best').textContent=best;
+
+  function initGame(){
+    grid=Array.from({length:4},()=>Array(4).fill(0));
+    score=0;document.getElementById('score').textContent=0;
+    addRandom();addRandom();render();
+  }
+
+  function addRandom(){
+    const empty=[];
+    for(let r=0;r<4;r++)for(let c=0;c<4;c++)if(!grid[r][c])empty.push({r,c});
+    if(!empty.length)return;
+    const{r,c}=empty[Math.floor(Math.random()*empty.length)];
+    grid[r][c]=Math.random()<0.9?2:4;
+  }
+
+  function render(){
+    const el=document.getElementById('grid');
+    el.innerHTML=grid.flat().map(v=>{
+      const cls=v<=2048?'t'+v:(v?'tbig':'t0');
+      return `<div class="tile ${cls}">${v||''}</div>`;
+    }).join('');
+  }
+
+  function move(dir){
+    const prev=JSON.stringify(grid);
+    if(dir==='left')for(let r=0;r<4;r++)grid[r]=mergeLine(grid[r]);
+    else if(dir==='right')for(let r=0;r<4;r++)grid[r]=mergeLine(grid[r].reverse()).reverse();
+    else if(dir==='up'){for(let c=0;c<4;c++){let col=[grid[0][c],grid[1][c],grid[2][c],grid[3][c]];col=mergeLine(col);for(let r=0;r<4;r++)grid[r][c]=col[r];}}
+    else if(dir==='down'){for(let c=0;c<4;c++){let col=[grid[3][c],grid[2][c],grid[1][c],grid[0][c]];col=mergeLine(col);for(let r=0;r<4;r++)grid[3-r][c]=col[r];}}
+    if(JSON.stringify(grid)!==prev){
+      addRandom();render();
+      document.getElementById('score').textContent=score;
+      if(score>best){best=score;localStorage.setItem('2048_best',best);document.getElementById('best').textContent=best;}
+      if(isGameOver()){setTimeout(()=>alert('游戏结束！得分: '+score),200);}
+    }
+  }
+
+  function mergeLine(line){
+    let arr=line.filter(v=>v);
+    for(let i=0;i<arr.length-1;i++){
+      if(arr[i]===arr[i+1]){arr[i]*=2;score+=arr[i];arr.splice(i+1,1);}
+    }
+    while(arr.length<4)arr.push(0);
+    return arr;
+  }
+
+  function isGameOver(){
+    for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+      if(!grid[r][c])return false;
+      if(c<3&&grid[r][c]===grid[r][c+1])return false;
+      if(r<3&&grid[r][c]===grid[r+1][c])return false;
+    }
+    return true;
+  }
+
+  document.addEventListener('keydown',e=>{
+    switch(e.key){
+      case'ArrowUp':case'w':move('up');e.preventDefault();break;
+      case'ArrowDown':case's':move('down');e.preventDefault();break;
+      case'ArrowLeft':case'a':move('left');e.preventDefault();break;
+      case'ArrowRight':case'd':move('right');e.preventDefault();break;
+    }
+  });
+
+  // touch swipe
+  let tx,ty;
+  document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;});
+  document.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)<30&&Math.abs(dy)<30)return;
+    if(Math.abs(dx)>Math.abs(dy)){move(dx>0?'right':'left');}else{move(dy>0?'down':'up');}
+  });
+
+  initGame();
+  </script>
+</body>
+</html>

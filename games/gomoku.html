@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>五子棋 Gomoku - 免费在线游戏</title>
+  <meta name="description" content="免费在线五子棋，对战AI电脑。Free online Gomoku game vs AI.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">⚫ 五子棋 Gomoku</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">你执黑先行，五子连珠获胜 | You play black, five in a row wins</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="status">你的回合</div><div class="label">状态</div></div>
+        <div class="score-item"><div class="value" id="wins">0</div><div class="label">胜场 Wins</div></div>
+      </div>
+      <canvas id="board" width="450" height="450" style="cursor:pointer"></canvas>
+      <div class="game-controls">
+        <button class="btn" onclick="initGame()">🔄 新游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('board'),ctx=cv.getContext('2d');
+  const SIZE=15,CELL=cv.width/(SIZE+1);
+  let grid,isPlayerTurn,gameActive,wins=+(localStorage.getItem('gomoku_wins')||0);
+  document.getElementById('wins').textContent=wins;
+
+  function initGame(){
+    grid=Array.from({length:SIZE},()=>Array(SIZE).fill(0));
+    isPlayerTurn=true;gameActive=true;
+    document.getElementById('status').textContent='你的回合';
+    drawBoard();
+  }
+
+  function drawBoard(){
+    ctx.fillStyle='#dcb35c';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.strokeStyle='#333';ctx.lineWidth=1;
+    for(let i=0;i<SIZE;i++){
+      ctx.beginPath();ctx.moveTo(CELL+i*CELL,CELL);ctx.lineTo(CELL+i*CELL,CELL*SIZE);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(CELL,CELL+i*CELL);ctx.lineTo(CELL*SIZE,CELL+i*CELL);ctx.stroke();
+    }
+    // star points
+    const stars=[3,7,11];
+    stars.forEach(r=>stars.forEach(c=>{
+      ctx.beginPath();ctx.arc(CELL+c*CELL,CELL+r*CELL,3,0,Math.PI*2);ctx.fillStyle='#333';ctx.fill();
+    }));
+    // pieces
+    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+      if(grid[r][c]){
+        ctx.beginPath();ctx.arc(CELL+c*CELL,CELL+r*CELL,CELL*0.42,0,Math.PI*2);
+        ctx.fillStyle=grid[r][c]===1?'#111':'#fff';ctx.fill();
+        ctx.strokeStyle=grid[r][c]===1?'#000':'#aaa';ctx.lineWidth=1;ctx.stroke();
+      }
+    }
+  }
+
+  function checkWin(player){
+    const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+      if(grid[r][c]!==player)continue;
+      for(const[dr,dc]of dirs){
+        let count=1;
+        for(let i=1;i<5;i++){const nr=r+dr*i,nc=c+dc*i;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&grid[nr][nc]===player)count++;else break;}
+        if(count>=5)return true;
+      }
+    }
+    return false;
+  }
+
+  // Simple AI
+  function aiMove(){
+    let bestScore=-Infinity,bestR=0,bestC=0;
+    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+      if(grid[r][c])continue;
+      if(!hasNeighbor(r,c))continue;
+      const score=evalPos(r,c,2)+evalPos(r,c,1)*0.9;
+      if(score>bestScore){bestScore=score;bestR=r;bestC=c;}
+    }
+    grid[bestR][bestC]=2;
+    drawBoard();
+    if(checkWin(2)){gameActive=false;document.getElementById('status').textContent='AI胜！';return;}
+    isPlayerTurn=true;document.getElementById('status').textContent='你的回合';
+  }
+
+  function hasNeighbor(r,c){
+    for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&grid[nr][nc])return true;
+    }
+    return false;
+  }
+
+  function evalPos(r,c,player){
+    const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+    let total=0;
+    for(const[dr,dc]of dirs){
+      let count=1,open=0;
+      for(let i=1;i<5;i++){const nr=r+dr*i,nc=c+dc*i;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&grid[nr][nc]===player)count++;else{if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&!grid[nr][nc])open++;break;}}
+      for(let i=1;i<5;i++){const nr=r-dr*i,nc=c-dc*i;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&grid[nr][nc]===player)count++;else{if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&!grid[nr][nc])open++;break;}}
+      if(count>=5)total+=100000;
+      else if(count===4&&open===2)total+=50000;
+      else if(count===4&&open===1)total+=5000;
+      else if(count===3&&open===2)total+=5000;
+      else if(count===3&&open===1)total+=500;
+      else if(count===2&&open===2)total+=500;
+      else if(count===2&&open===1)total+=50;
+    }
+    return total;
+  }
+
+  cv.addEventListener('click',e=>{
+    if(!gameActive||!isPlayerTurn)return;
+    const rect=cv.getBoundingClientRect();
+    const x=e.clientX-rect.left,y=e.clientY-rect.top;
+    const c=Math.round((x-CELL)/CELL),r=Math.round((y-CELL)/CELL);
+    if(r<0||r>=SIZE||c<0||c>=SIZE||grid[r][c])return;
+    grid[r][c]=1;drawBoard();
+    if(checkWin(1)){gameActive=false;wins++;localStorage.setItem('gomoku_wins',wins);document.getElementById('wins').textContent=wins;document.getElementById('status').textContent='你赢了！';return;}
+    isPlayerTurn=false;document.getElementById('status').textContent='AI思考中...';
+    setTimeout(aiMove,300);
+  });
+
+  initGame();
+  </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>扫雷 Minesweeper - 免费在线游戏</title>
+  <meta name="description" content="免费在线扫雷游戏，经典玩法，三种难度。Free online Minesweeper game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+  .mine-grid{display:inline-grid;gap:1px;background:#999;border:3px solid #777;border-radius:4px;margin:0 auto}
+  .mine-cell{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none;transition:background .1s}
+  .mine-cell.hidden{background:#bbb;border:2px outset #ddd}
+  .mine-cell.hidden:hover{background:#ccc}
+  .mine-cell.revealed{background:#eee;border:1px solid #ccc}
+  .mine-cell.flagged{background:#bbb;border:2px outset #ddd}
+  .mine-cell.boom{background:#f44;border:1px solid #c00}
+  .n1{color:#0000ff}.n2{color:#008000}.n3{color:#ff0000}.n4{color:#000080}
+  .n5{color:#800000}.n6{color:#008080}.n7{color:#000}.n8{color:#808080}
+  .diff-btns{display:flex;gap:8px;justify-content:center;margin-bottom:15px;flex-wrap:wrap}
+  @media(max-width:500px){.mine-cell{width:24px;height:24px;font-size:11px}}
+  </style>
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">💣 扫雷 Minesweeper</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">左键揭开，右键/长按标旗 | Click to reveal, right-click to flag</p>
+    <div class="game-container">
+      <div class="diff-btns">
+        <button class="btn btn-sm" onclick="setDiff(9,9,10)">初级 Easy (9×9)</button>
+        <button class="btn btn-sm btn-outline" onclick="setDiff(16,16,40)">中级 Medium (16×16)</button>
+        <button class="btn btn-sm btn-outline" onclick="setDiff(16,30,99)">高级 Hard (30×16)</button>
+      </div>
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="mines">10</div><div class="label">💣 地雷</div></div>
+        <div class="score-item"><div class="value" id="timer">0</div><div class="label">⏱ 用时</div></div>
+        <div class="score-item"><div class="value" id="bestTime">-</div><div class="label">🏆 最佳</div></div>
+      </div>
+      <div style="text-align:center;overflow-x:auto;padding:10px 0">
+        <div class="mine-grid" id="grid"></div>
+      </div>
+      <div class="game-controls">
+        <button class="btn" onclick="initGame()">🔄 新游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  let rows=9,cols=9,mineCount=10,board,revealed,flagged,gameOver,firstClick,timerInterval,seconds;
+  const diffKey=()=>`mine_best_${rows}x${cols}`;
+
+  function setDiff(r,c,m){
+    rows=r;cols=c;mineCount=m;
+    document.querySelectorAll('.diff-btns .btn').forEach(b=>b.className='btn btn-sm btn-outline');
+    event.currentTarget.className='btn btn-sm';
+    initGame();
+  }
+
+  function initGame(){
+    board=Array.from({length:rows},()=>Array(cols).fill(0));
+    revealed=Array.from({length:rows},()=>Array(cols).fill(false));
+    flagged=Array.from({length:rows},()=>Array(cols).fill(false));
+    gameOver=false;firstClick=true;seconds=0;
+    clearInterval(timerInterval);
+    document.getElementById('timer').textContent='0';
+    document.getElementById('mines').textContent=mineCount;
+    const best=localStorage.getItem(diffKey());
+    document.getElementById('bestTime').textContent=best||'-';
+    render();
+  }
+
+  function placeMines(safeR,safeC){
+    let placed=0;
+    while(placed<mineCount){
+      const r=Math.floor(Math.random()*rows),c=Math.floor(Math.random()*cols);
+      if(board[r][c]===-1)continue;
+      if(Math.abs(r-safeR)<=1&&Math.abs(c-safeC)<=1)continue;
+      board[r][c]=-1;placed++;
+    }
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      if(board[r][c]===-1)continue;
+      let count=0;
+      for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+        const nr=r+dr,nc=c+dc;
+        if(nr>=0&&nr<rows&&nc>=0&&nc<cols&&board[nr][nc]===-1)count++;
+      }
+      board[r][c]=count;
+    }
+  }
+
+  function reveal(r,c){
+    if(r<0||r>=rows||c<0||c>=cols||revealed[r][c]||flagged[r][c]||gameOver)return;
+    revealed[r][c]=true;
+    if(board[r][c]===0){
+      for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)reveal(r+dr,c+dc);
+    }
+  }
+
+  function cellClick(r,c){
+    if(gameOver||flagged[r][c])return;
+    if(firstClick){
+      firstClick=false;
+      placeMines(r,c);
+      timerInterval=setInterval(()=>{seconds++;document.getElementById('timer').textContent=seconds;},1000);
+    }
+    if(board[r][c]===-1){
+      gameOver=true;clearInterval(timerInterval);
+      revealed[r][c]=true;
+      // reveal all mines
+      for(let i=0;i<rows;i++)for(let j=0;j<cols;j++)if(board[i][j]===-1)revealed[i][j]=true;
+      render();return;
+    }
+    reveal(r,c);
+    render();
+    checkWin();
+  }
+
+  function cellFlag(r,c,e){
+    if(e)e.preventDefault();
+    if(gameOver||revealed[r][c])return;
+    flagged[r][c]=!flagged[r][c];
+    const remaining=mineCount-flagged.flat().filter(f=>f).length;
+    document.getElementById('mines').textContent=remaining;
+    render();
+  }
+
+  function checkWin(){
+    let unrevealed=0;
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(!revealed[r][c])unrevealed++;
+    if(unrevealed===mineCount){
+      gameOver=true;clearInterval(timerInterval);
+      const best=localStorage.getItem(diffKey());
+      if(!best||seconds<parseInt(best)){localStorage.setItem(diffKey(),seconds);document.getElementById('bestTime').textContent=seconds;}
+      setTimeout(()=>alert('🎉 恭喜通关！用时 '+seconds+' 秒'),100);
+    }
+  }
+
+  function render(){
+    const grid=document.getElementById('grid');
+    grid.style.gridTemplateColumns=`repeat(${cols},28px)`;
+    let html='';
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      if(!revealed[r][c]){
+        const cls=flagged[r][c]?'mine-cell flagged':'mine-cell hidden';
+        html+=`<div class="${cls}" onclick="cellClick(${r},${c})" oncontextmenu="cellFlag(${r},${c},event)">${flagged[r][c]?'🚩':''}</div>`;
+      }else if(board[r][c]===-1){
+        html+=`<div class="mine-cell boom">💣</div>`;
+      }else{
+        const n=board[r][c];
+        html+=`<div class="mine-cell revealed ${n?'n'+n:''}">${n||''}</div>`;
+      }
+    }
+    grid.innerHTML=html;
+  }
+
+  // long press for mobile flag
+  let longTimer;
+  document.addEventListener('touchstart',e=>{
+    const cell=e.target.closest('.mine-cell.hidden,.mine-cell.flagged');
+    if(!cell)return;
+    longTimer=setTimeout(()=>{
+      const idx=[...cell.parentNode.children].indexOf(cell);
+      const r=Math.floor(idx/cols),c=idx%cols;
+      cellFlag(r,c);
+    },500);
+  });
+  document.addEventListener('touchend',()=>clearTimeout(longTimer));
+  document.addEventListener('touchmove',()=>clearTimeout(longTimer));
+
+  initGame();
+  </script>
+</body>
+</html>

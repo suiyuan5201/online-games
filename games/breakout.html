@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>打砖块 Breakout - 免费在线游戏</title>
+  <meta name="description" content="免费在线打砖块游戏，弹球消除所有砖块。Free online Breakout game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🧱 打砖块 Breakout</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">鼠标/触屏移动挡板 | Move paddle with mouse/touch</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="score">0</div><div class="label">得分 Score</div></div>
+        <div class="score-item"><div class="value" id="lives">3</div><div class="label">❤️ 生命</div></div>
+        <div class="score-item"><div class="value" id="best">0</div><div class="label">最高 Best</div></div>
+      </div>
+      <canvas id="game" width="480" height="400"></canvas>
+      <div class="game-controls">
+        <button class="btn" id="startBtn" onclick="startGame()">🎮 开始游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+  const BRICK_ROWS=5,BRICK_COLS=8,BRICK_W=cv.width/BRICK_COLS-4,BRICK_H=18,BRICK_PAD=4,BRICK_TOP=40;
+  const COLORS=['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6'];
+  const PADDLE_W=80,PADDLE_H=12;
+  let bricks,ball,paddle,score,lives,animId,running=false;
+  let best=+(localStorage.getItem('breakout_best')||0);
+  document.getElementById('best').textContent=best;
+
+  function init(){
+    bricks=[];
+    for(let r=0;r<BRICK_ROWS;r++)for(let c=0;c<BRICK_COLS;c++){
+      bricks.push({x:c*(BRICK_W+BRICK_PAD)+BRICK_PAD/2+2,y:r*(BRICK_H+BRICK_PAD)+BRICK_TOP,w:BRICK_W,h:BRICK_H,color:COLORS[r],alive:true});
+    }
+    ball={x:cv.width/2,y:cv.height-50,dx:3,dy:-3,r:6};
+    paddle={x:(cv.width-PADDLE_W)/2,y:cv.height-25,w:PADDLE_W,h:PADDLE_H};
+    score=0;lives=3;
+    document.getElementById('score').textContent=0;
+    document.getElementById('lives').textContent=3;
+  }
+
+  function draw(){
+    ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,cv.width,cv.height);
+    // bricks
+    bricks.forEach(b=>{
+      if(!b.alive)return;
+      ctx.fillStyle=b.color;
+      ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,3);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.2)';ctx.fillRect(b.x,b.y,b.w,3);
+    });
+    // paddle
+    ctx.fillStyle='#e2e8f0';
+    ctx.beginPath();ctx.roundRect(paddle.x,paddle.y,paddle.w,paddle.h,6);ctx.fill();
+    // ball
+    ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+    ctx.fillStyle='#f0f0f0';ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.5)';
+    ctx.beginPath();ctx.arc(ball.x-2,ball.y-2,ball.r*0.4,0,Math.PI*2);ctx.fill();
+  }
+
+  function update(){
+    ball.x+=ball.dx;ball.y+=ball.dy;
+    // wall bounce
+    if(ball.x-ball.r<=0||ball.x+ball.r>=cv.width)ball.dx=-ball.dx;
+    if(ball.y-ball.r<=0)ball.dy=-ball.dy;
+    // paddle bounce
+    if(ball.y+ball.r>=paddle.y&&ball.x>=paddle.x&&ball.x<=paddle.x+paddle.w&&ball.dy>0){
+      ball.dy=-ball.dy;
+      ball.dx=((ball.x-(paddle.x+paddle.w/2))/(paddle.w/2))*4;
+    }
+    // bottom
+    if(ball.y+ball.r>=cv.height){
+      lives--;document.getElementById('lives').textContent=lives;
+      if(lives<=0){gameOver();return;}
+      ball.x=cv.width/2;ball.y=cv.height-50;ball.dx=3;ball.dy=-3;
+    }
+    // brick collision
+    bricks.forEach(b=>{
+      if(!b.alive)return;
+      if(ball.x+ball.r>b.x&&ball.x-ball.r<b.x+b.w&&ball.y+ball.r>b.y&&ball.y-ball.r<b.y+b.h){
+        b.alive=false;ball.dy=-ball.dy;
+        score+=10;document.getElementById('score').textContent=score;
+      }
+    });
+    // win check
+    if(bricks.every(b=>!b.alive)){
+      cancelAnimationFrame(animId);running=false;
+      if(score>best){best=score;localStorage.setItem('breakout_best',best);document.getElementById('best').textContent=best;}
+      ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,cv.width,cv.height);
+      ctx.fillStyle='#10b981';ctx.font='bold 32px sans-serif';ctx.textAlign='center';
+      ctx.fillText('🎉 You Win!',cv.width/2,cv.height/2);
+      return;
+    }
+    draw();
+    animId=requestAnimationFrame(update);
+  }
+
+  function gameOver(){
+    cancelAnimationFrame(animId);running=false;
+    if(score>best){best=score;localStorage.setItem('breakout_best',best);document.getElementById('best').textContent=best;}
+    ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#fff';ctx.font='bold 28px sans-serif';ctx.textAlign='center';
+    ctx.fillText('Game Over!',cv.width/2,cv.height/2-15);
+    ctx.font='16px sans-serif';ctx.fillText('得分: '+score+'  最高: '+best,cv.width/2,cv.height/2+20);
+  }
+
+  function startGame(){
+    cancelAnimationFrame(animId);
+    init();running=true;draw();
+    animId=requestAnimationFrame(update);
+    document.getElementById('startBtn').textContent='🔄 重新开始';
+  }
+
+  cv.addEventListener('mousemove',e=>{
+    const rect=cv.getBoundingClientRect();
+    paddle.x=Math.max(0,Math.min(cv.width-paddle.w,(e.clientX-rect.left)*(cv.width/rect.width)-paddle.w/2));
+    if(!running)draw();
+  });
+  cv.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    const rect=cv.getBoundingClientRect();
+    paddle.x=Math.max(0,Math.min(cv.width-paddle.w,(e.touches[0].clientX-rect.left)*(cv.width/rect.width)-paddle.w/2));
+    if(!running)draw();
+  },{passive:false});
+
+  init();draw();
+  </script>
+</body>
+</html>

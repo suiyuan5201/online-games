@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>俄罗斯方块 Tetris - 免费在线游戏</title>
+  <meta name="description" content="免费在线俄罗斯方块，经典玩法，旋转消行。Free online Tetris game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🧱 俄罗斯方块 Tetris</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">方向键操作，↑旋转 | Arrow keys, ↑ to rotate</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="score">0</div><div class="label">得分 Score</div></div>
+        <div class="score-item"><div class="value" id="lines">0</div><div class="label">消行 Lines</div></div>
+        <div class="score-item"><div class="value" id="level">1</div><div class="label">等级 Level</div></div>
+        <div class="score-item"><div class="value" id="best">0</div><div class="label">最高 Best</div></div>
+      </div>
+      <canvas id="game" width="300" height="600"></canvas>
+      <div class="game-controls">
+        <button class="btn" id="startBtn" onclick="startGame()">🎮 开始游戏</button>
+        <button class="btn btn-outline" onclick="pauseGame()">⏸ 暂停</button>
+      </div>
+      <div class="mobile-controls">
+        <button class="mobile-btn" onclick="rotate()">🔄</button>
+      </div>
+      <div class="mobile-controls" style="display:flex;gap:30px">
+        <button class="mobile-btn" onclick="moveLeft()">⬅️</button>
+        <button class="mobile-btn" onclick="hardDrop()">⬇️</button>
+        <button class="mobile-btn" onclick="moveRight()">➡️</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+  const COLS=10,ROWS=20,CELL=cv.width/COLS;
+  const COLORS=['#00f0f0','#0000f0','#f0a000','#f0f000','#00f000','#a000f0','#f00000'];
+  const SHAPES=[
+    [[1,1,1,1]],
+    [[1,0,0],[1,1,1]],
+    [[0,0,1],[1,1,1]],
+    [[1,1],[1,1]],
+    [[0,1,1],[1,1,0]],
+    [[0,1,0],[1,1,1]],
+    [[1,1,0],[0,1,1]]
+  ];
+  let board,current,currentX,currentY,currentType,score,lines,level,gameLoop,paused=false;
+  let best=+(localStorage.getItem('tetris_best')||0);
+  document.getElementById('best').textContent=best;
+
+  function createBoard(){return Array.from({length:ROWS},()=>Array(COLS).fill(0));}
+
+  function newPiece(){
+    currentType=Math.floor(Math.random()*SHAPES.length);
+    current=SHAPES[currentType].map(r=>[...r]);
+    currentX=Math.floor((COLS-current[0].length)/2);
+    currentY=0;
+    if(collides(current,currentX,currentY)){gameOver();return false;}
+    return true;
+  }
+
+  function collides(piece,px,py){
+    for(let r=0;r<piece.length;r++)
+      for(let c=0;c<piece[r].length;c++)
+        if(piece[r][c]){
+          const nx=px+c,ny=py+r;
+          if(nx<0||nx>=COLS||ny>=ROWS)return true;
+          if(ny>=0&&board[ny][nx])return true;
+        }
+    return false;
+  }
+
+  function merge(){
+    for(let r=0;r<current.length;r++)
+      for(let c=0;c<current[r].length;c++)
+        if(current[r][c]&&currentY+r>=0)
+          board[currentY+r][currentX+c]=currentType+1;
+  }
+
+  function clearLines(){
+    let cleared=0;
+    for(let r=ROWS-1;r>=0;r--){
+      if(board[r].every(c=>c)){
+        board.splice(r,1);
+        board.unshift(Array(COLS).fill(0));
+        cleared++;r++;
+      }
+    }
+    if(cleared){
+      const pts=[0,100,300,500,800];
+      score+=pts[cleared]*level;
+      lines+=cleared;
+      level=Math.floor(lines/10)+1;
+      document.getElementById('score').textContent=score;
+      document.getElementById('lines').textContent=lines;
+      document.getElementById('level').textContent=level;
+    }
+  }
+
+  function rotatePiece(piece){
+    const rows=piece.length,cols=piece[0].length;
+    const rotated=Array.from({length:cols},()=>Array(rows).fill(0));
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)rotated[c][rows-1-r]=piece[r][c];
+    return rotated;
+  }
+
+  function draw(){
+    ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,cv.width,cv.height);
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,.05)';
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ctx.strokeRect(c*CELL,r*CELL,CELL,CELL);}
+    // board
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      if(board[r][c]){
+        ctx.fillStyle=COLORS[board[r][c]-1];
+        ctx.fillRect(c*CELL+1,r*CELL+1,CELL-2,CELL-2);
+        ctx.fillStyle='rgba(255,255,255,.15)';
+        ctx.fillRect(c*CELL+1,r*CELL+1,CELL-2,3);
+      }
+    }
+    // current piece
+    if(current){
+      ctx.fillStyle=COLORS[currentType];
+      for(let r=0;r<current.length;r++)
+        for(let c=0;c<current[r].length;c++)
+          if(current[r][c]&&currentY+r>=0){
+            ctx.fillRect((currentX+c)*CELL+1,(currentY+r)*CELL+1,CELL-2,CELL-2);
+            ctx.fillStyle='rgba(255,255,255,.2)';
+            ctx.fillRect((currentX+c)*CELL+1,(currentY+r)*CELL+1,CELL-2,3);
+            ctx.fillStyle=COLORS[currentType];
+          }
+    }
+  }
+
+  function tick(){
+    if(paused)return;
+    if(!collides(current,currentX,currentY+1)){currentY++;}
+    else{merge();clearLines();if(!newPiece())return;}
+    draw();
+  }
+
+  function startGame(){
+    clearInterval(gameLoop);
+    board=createBoard();score=0;lines=0;level=1;paused=false;
+    document.getElementById('score').textContent=0;
+    document.getElementById('lines').textContent=0;
+    document.getElementById('level').textContent=1;
+    newPiece();draw();
+    gameLoop=setInterval(()=>{tick();},1000/level);
+    document.getElementById('startBtn').textContent='🔄 重新开始';
+  }
+
+  function pauseGame(){paused=!paused;}
+  function moveLeft(){if(!collides(current,currentX-1,currentY)){currentX--;draw();}}
+  function moveRight(){if(!collides(current,currentX+1,currentY)){currentX++;draw();}}
+  function rotate(){const r=rotatePiece(current);if(!collides(r,currentX,currentY)){current=r;draw();}}
+  function hardDrop(){while(!collides(current,currentX,currentY+1))currentY++;merge();clearLines();newPiece();draw();}
+
+  function gameOver(){
+    clearInterval(gameLoop);
+    if(score>best){best=score;localStorage.setItem('tetris_best',best);document.getElementById('best').textContent=best;}
+    ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#fff';ctx.font='bold 28px sans-serif';ctx.textAlign='center';
+    ctx.fillText('Game Over!',cv.width/2,cv.height/2-15);
+    ctx.font='16px sans-serif';ctx.fillText('得分: '+score+'  最高: '+best,cv.width/2,cv.height/2+20);
+  }
+
+  document.addEventListener('keydown',e=>{
+    if(!current)return;
+    switch(e.key){
+      case'ArrowLeft':case'a':moveLeft();e.preventDefault();break;
+      case'ArrowRight':case'd':moveRight();e.preventDefault();break;
+      case'ArrowDown':case's':tick();e.preventDefault();break;
+      case'ArrowUp':case'w':rotate();e.preventDefault();break;
+      case' ':hardDrop();e.preventDefault();break;
+    }
+  });
+
+  board=createBoard();draw();
+  </script>
+</body>
+</html>

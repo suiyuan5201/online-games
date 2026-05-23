@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>井字棋 Tic-Tac-Toe - 免费在线游戏</title>
+  <meta name="description" content="免费在线井字棋，对战AI电脑。Free online Tic-Tac-Toe game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+  .ttt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:300px;margin:0 auto}
+  .ttt-cell{aspect-ratio:1;background:var(--card-bg);border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:3em;cursor:pointer;transition:all .2s;font-weight:700}
+  .ttt-cell:hover{background:#f0f4ff}
+  .ttt-cell.x{color:#ef4444}.ttt-cell.o{color:#3b82f6}
+  .ttt-cell.win{background:#dcfce7;border-color:#10b981}
+  </style>
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">❌ 井字棋 Tic-Tac-Toe</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">你执 X 先行，三子连线获胜 | You play X, three in a row wins</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="status">你的回合</div><div class="label">状态 Status</div></div>
+        <div class="score-item"><div class="value" id="wins">0</div><div class="label">胜 Win</div></div>
+        <div class="score-item"><div class="value" id="draws">0</div><div class="label">平 Draw</div></div>
+        <div class="score-item"><div class="value" id="losses">0</div><div class="label">负 Lose</div></div>
+      </div>
+      <div class="ttt-grid" id="grid"></div>
+      <div class="game-controls" style="margin-top:15px">
+        <button class="btn" onclick="initGame()">🔄 新游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  let board,gameActive,wins=0,draws=0,losses=0;
+  const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+  function initGame(){
+    board=Array(9).fill('');gameActive=true;
+    document.getElementById('status').textContent='你的回合';
+    render();
+  }
+
+  function render(){
+    document.getElementById('grid').innerHTML=board.map((c,i)=>
+      `<div class="ttt-cell ${c==='X'?'x':c==='O'?'o':''}" onclick="playerMove(${i})">${c}</div>`
+    ).join('');
+  }
+
+  function playerMove(i){
+    if(!gameActive||board[i])return;
+    board[i]='X';render();
+    if(checkResult('X'))return;
+    if(board.every(c=>c)){draws++;document.getElementById('draws').textContent=draws;document.getElementById('status').textContent='平局！';gameActive=false;return;}
+    document.getElementById('status').textContent='AI思考中...';
+    setTimeout(aiMove,300);
+  }
+
+  function aiMove(){
+    // try to win
+    let move=findBestMove('O');
+    if(move===-1)move=findBestMove('X'); // block player
+    if(move===-1&&!board[4])move=4; // center
+    if(move===-1){const corners=[0,2,6,8].filter(i=>!board[i]);if(corners.length)move=corners[Math.floor(Math.random()*corners.length)];}
+    if(move===-1)move=board.findIndex(c=>!c);
+    board[move]='O';render();
+    if(checkResult('O'))return;
+    if(board.every(c=>c)){draws++;document.getElementById('draws').textContent=draws;document.getElementById('status').textContent='平局！';gameActive=false;return;}
+    document.getElementById('status').textContent='你的回合';
+  }
+
+  function findBestMove(player){
+    for(const line of LINES){
+      const vals=line.map(i=>board[i]);
+      if(vals.filter(v=>v===player).length===2&&vals.includes('')){
+        return line[vals.indexOf('')];
+      }
+    }
+    return -1;
+  }
+
+  function checkResult(player){
+    for(const line of LINES){
+      if(line.every(i=>board[i]===player)){
+        gameActive=false;
+        line.forEach(i=>{document.querySelectorAll('.ttt-cell')[i].classList.add('win');});
+        if(player==='X'){wins++;document.getElementById('wins').textContent=wins;document.getElementById('status').textContent='你赢了！';}
+        else{losses++;document.getElementById('losses').textContent=losses;document.getElementById('status').textContent='AI赢了！';}
+        return true;
+      }
+    }
+    return false;
+  }
+
+  initGame();
+  </script>
+</body>
+</html>

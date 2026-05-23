@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>翻牌配对 Memory - 免费在线游戏</title>
+  <meta name="description" content="免费在线翻牌配对游戏，锻炼记忆力。Free online Memory card matching game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+  .memory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:420px;margin:0 auto}
+  .memory-card{aspect-ratio:1;border-radius:10px;cursor:pointer;position:relative;transform-style:preserve-3d;transition:transform .4s}
+  .memory-card.flipped{transform:rotateY(180deg)}
+  .card-front,.card-back{position:absolute;width:100%;height:100%;border-radius:10px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden}
+  .card-back{background:linear-gradient(135deg,var(--primary),#ec4899);font-size:24px;color:#fff}
+  .card-front{background:#fff;border:2px solid var(--border);transform:rotateY(180deg);font-size:2.5em}
+  .memory-card.matched .card-front{background:#dcfce7;border-color:#10b981}
+  .diff-selector{display:flex;gap:8px;justify-content:center;margin-bottom:15px}
+  @media(max-width:500px){.memory-grid{grid-template-columns:repeat(4,1fr);gap:6px}.card-front{font-size:1.8em}}
+  </style>
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🃏 翻牌配对 Memory</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">翻开两张相同的牌即可消除 | Flip cards & match pairs</p>
+    <div class="game-container">
+      <div class="diff-selector">
+        <button class="btn btn-sm" onclick="setSize(4)">4×4 简单</button>
+        <button class="btn btn-sm btn-outline" onclick="setSize(6)">4×6 中等</button>
+        <button class="btn btn-sm btn-outline" onclick="setSize(8)">4×8 困难</button>
+      </div>
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="moves">0</div><div class="label">步数 Moves</div></div>
+        <div class="score-item"><div class="value" id="pairs">0</div><div class="label">配对 Pairs</div></div>
+        <div class="score-item"><div class="value" id="timer">0s</div><div class="label">用时 Time</div></div>
+      </div>
+      <div class="memory-grid" id="grid"></div>
+      <div class="game-controls" style="margin-top:15px">
+        <button class="btn" onclick="initGame()">🔄 新游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const EMOJIS=['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦄','🐝','🐙','🦋','🌸','🌺','🍎'];
+  let cards,flipped=[],matched=0,moves=0,totalPairs,cols=4,rows=4,timerInterval,seconds=0,locked=false;
+
+  function setSize(n){
+    rows=n;
+    document.querySelectorAll('.diff-selector .btn').forEach(b=>b.className='btn btn-sm btn-outline');
+    event.currentTarget.className='btn btn-sm';
+    initGame();
+  }
+
+  function initGame(){
+    totalPairs=(cols*rows)/2;matched=0;moves=0;seconds=0;locked=false;flipped=[];
+    clearInterval(timerInterval);
+    document.getElementById('moves').textContent='0';
+    document.getElementById('pairs').textContent='0/'+totalPairs;
+    document.getElementById('timer').textContent='0s';
+    const emojis=EMOJIS.slice(0,totalPairs);
+    cards=[...emojis,...emojis].sort(()=>Math.random()-0.5);
+    const grid=document.getElementById('grid');
+    grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+    grid.innerHTML=cards.map((emoji,i)=>`
+      <div class="memory-card" onclick="flipCard(${i},this)">
+        <div class="card-back">?</div>
+        <div class="card-front">${emoji}</div>
+      </div>
+    `).join('');
+  }
+
+  function flipCard(idx,el){
+    if(locked||el.classList.contains('flipped')||el.classList.contains('matched'))return;
+    if(!timerInterval)timerInterval=setInterval(()=>{seconds++;document.getElementById('timer').textContent=seconds+'s';},1000);
+    el.classList.add('flipped');
+    flipped.push({idx,el});
+    if(flipped.length===2){
+      moves++;document.getElementById('moves').textContent=moves;
+      locked=true;
+      const[a,b]=flipped;
+      if(cards[a.idx]===cards[b.idx]){
+        a.el.classList.add('matched');b.el.classList.add('matched');
+        matched++;document.getElementById('pairs').textContent=matched+'/'+totalPairs;
+        flipped=[];locked=false;
+        if(matched===totalPairs){clearInterval(timerInterval);setTimeout(()=>alert('🎉 恭喜！'+moves+'步完成，用时'+seconds+'秒'),300);}
+      }else{
+        setTimeout(()=>{a.el.classList.remove('flipped');b.el.classList.remove('flipped');flipped=[];locked=false;},800);
+      }
+    }
+  }
+
+  initGame();
+  </script>
+</body>
+</html>

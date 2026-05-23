@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>打字游戏 Typing Game - 免费在线游戏</title>
+  <meta name="description" content="免费在线打字游戏，单词从天而降，快速输入消除。Free online typing game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">⌨️ 打字游戏 Typing Game</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">输入下落的单词消除它们 | Type the falling words to destroy them</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="score">0</div><div class="label">得分 Score</div></div>
+        <div class="score-item"><div class="value" id="lives">5</div><div class="label">❤️ 生命</div></div>
+        <div class="score-item"><div class="value" id="level">1</div><div class="label">等级 Level</div></div>
+        <div class="score-item"><div class="value" id="best">0</div><div class="label">最高 Best</div></div>
+      </div>
+      <canvas id="game" width="480" height="400"></canvas>
+      <input type="text" id="input" placeholder="输入单词... Type here..." style="width:100%;max-width:300px;padding:10px 16px;border:2px solid var(--border);border-radius:10px;font-size:16px;text-align:center;margin-top:12px;outline:none" autocomplete="off" autocapitalize="off">
+      <div class="game-controls" style="margin-top:10px">
+        <button class="btn" onclick="startGame()">🎮 开始游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+  const WORDS=['apple','code','game','fire','water','happy','light','dream','music','power','space','world','brain','cloud','storm','magic','super','robot','flash','smile','pixel','swift','brave','ocean','heart','tiger','eagle','night','solar','cyber','ninja','delta','alpha','blaze','frost','stone','lucky','hero','quest','spark'];
+  let words,score,lives,level,animId,running=false,spawnTimer=0;
+  let best=+(localStorage.getItem('typing_game_best')||0);
+  document.getElementById('best').textContent=best;
+  const input=document.getElementById('input');
+
+  function init(){
+    words=[];score=0;lives=5;level=1;spawnTimer=0;
+    document.getElementById('score').textContent=0;
+    document.getElementById('lives').textContent=5;
+    document.getElementById('level').textContent=1;
+    input.value='';input.focus();
+  }
+
+  function spawnWord(){
+    const word=WORDS[Math.floor(Math.random()*WORDS.length)];
+    const x=Math.random()*(cv.width-80)+20;
+    words.push({text:word,x,y:-20,speed:0.3+level*0.15});
+  }
+
+  function draw(){
+    ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,cv.width,cv.height);
+    // danger zone
+    ctx.fillStyle='rgba(239,68,68,.1)';ctx.fillRect(0,cv.height-40,cv.width,40);
+    ctx.strokeStyle='rgba(239,68,68,.3)';ctx.setLineDash([5,5]);
+    ctx.beginPath();ctx.moveTo(0,cv.height-40);ctx.lineTo(cv.width,cv.height-40);ctx.stroke();
+    ctx.setLineDash([]);
+    // words
+    const typed=input.value.toLowerCase();
+    words.forEach(w=>{
+      const isTarget=w.text.startsWith(typed)&&typed.length>0;
+      ctx.font='bold 18px monospace';
+      if(isTarget){
+        ctx.fillStyle='#10b981';
+        ctx.fillText(w.text,w.x,w.y);
+        // highlight matched part
+        ctx.fillStyle='#fbbf24';
+        ctx.fillText(typed,w.x,w.y);
+      }else{
+        ctx.fillStyle='#e2e8f0';
+        ctx.fillText(w.text,w.x,w.y);
+      }
+    });
+  }
+
+  function update(){
+    if(!running)return;
+    spawnTimer++;
+    const spawnRate=Math.max(60,150-level*15);
+    if(spawnTimer>=spawnRate){spawnTimer=0;spawnWord();}
+
+    words.forEach(w=>w.y+=w.speed);
+
+    // remove words that fell
+    const fallen=words.filter(w=>w.y>cv.height);
+    if(fallen.length){
+      lives-=fallen.length;
+      document.getElementById('lives').textContent=Math.max(0,lives);
+      words=words.filter(w=>w.y<=cv.height);
+      if(lives<=0){gameOver();return;}
+    }
+
+    level=Math.floor(score/10)+1;
+    document.getElementById('level').textContent=level;
+
+    draw();
+    animId=requestAnimationFrame(update);
+  }
+
+  function startGame(){
+    cancelAnimationFrame(animId);
+    init();running=true;
+    animId=requestAnimationFrame(update);
+    input.focus();
+  }
+
+  function gameOver(){
+    running=false;cancelAnimationFrame(animId);
+    if(score>best){best=score;localStorage.setItem('typing_game_best',best);document.getElementById('best').textContent=best;}
+    ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#fff';ctx.font='bold 28px sans-serif';ctx.textAlign='center';
+    ctx.fillText('Game Over!',cv.width/2,cv.height/2-15);
+    ctx.font='16px sans-serif';ctx.fillText('得分: '+score+'  最高: '+best,cv.width/2,cv.height/2+20);
+    ctx.textAlign='start';
+  }
+
+  input.addEventListener('input',()=>{
+    const typed=input.value.toLowerCase().trim();
+    if(!typed)return;
+    const idx=words.findIndex(w=>w.text===typed);
+    if(idx!==-1){
+      words.splice(idx,1);
+      score++;document.getElementById('score').textContent=score;
+      input.value='';
+    }
+  });
+
+  init();draw();
+  </script>
+</body>
+</html>

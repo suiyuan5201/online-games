@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>免费在线小游戏 - 经典游戏合集 | Free Online Games</title>
+  <meta name="description" content="免费在线小游戏合集，贪吃蛇、俄罗斯方块、2048、扫雷、五子棋等经典游戏，无需下载，打开即玩。Free online games collection.">
+  <meta name="keywords" content="在线游戏,免费游戏,小游戏,贪吃蛇,俄罗斯方块,2048,扫雷,五子棋,online games,free games,snake,tetris,minesweeper">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="logo">🎮 游戏合集 GameBox</a>
+  </nav>
+  <div class="hero">
+    <h1>🎮 免费在线小游戏</h1>
+    <p>经典游戏合集，无需下载，打开即玩！Classic games, play instantly!</p>
+  </div>
+  <div class="container">
+    <div class="search-bar"><input type="text" id="searchInput" placeholder="搜索游戏 / Search games..." oninput="filterGames()"></div>
+    <div class="category-tabs" id="catTabs">
+      <span class="cat-tab active" onclick="filterCat('all',this)">全部 All</span>
+      <span class="cat-tab" onclick="filterCat('classic',this)">经典 Classic</span>
+      <span class="cat-tab" onclick="filterCat('puzzle',this)">益智 Puzzle</span>
+      <span class="cat-tab" onclick="filterCat('action',this)">动作 Action</span>
+      <span class="cat-tab" onclick="filterCat('board',this)">棋牌 Board</span>
+      <span class="cat-tab" onclick="filterCat('casual',this)">休闲 Casual</span>
+    </div>
+    <div class="game-grid" id="gameGrid"></div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script src="js/common.js"></script>
+  <script>
+  const GAMES=[
+    {name:'贪吃蛇 Snake',icon:'🐍',cat:'classic',desc:'经典贪吃蛇，吃果子变长！Classic snake game.',file:'snake.html',tags:['经典','Classic']},
+    {name:'俄罗斯方块 Tetris',icon:'🧱',cat:'classic',desc:'旋转方块，消除整行！Rotate & clear lines.',file:'tetris.html',tags:['经典','Classic']},
+    {name:'2048',icon:'🔢',cat:'puzzle',desc:'滑动合并，挑战2048！Slide to merge numbers.',file:'2048.html',tags:['益智','Puzzle']},
+    {name:'扫雷 Minesweeper',icon:'💣',cat:'puzzle',desc:'经典扫雷，别踩地雷！Find mines carefully.',file:'minesweeper.html',tags:['益智','Puzzle']},
+    {name:'五子棋 Gomoku',icon:'⚫',cat:'board',desc:'五子连珠，对战AI！Five in a row vs AI.',file:'gomoku.html',tags:['棋牌','Board']},
+    {name:'翻牌配对 Memory',icon:'🃏',cat:'puzzle',desc:'翻牌记忆配对！Flip cards & match pairs.',file:'memory.html',tags:['益智','Memory']},
+    {name:'打砖块 Breakout',icon:'🧱',cat:'action',desc:'弹球打砖块！Bounce ball, break bricks.',file:'breakout.html',tags:['动作','Action']},
+    {name:'飞翔小鸟 Flappy',icon:'🐦',cat:'action',desc:'点击飞翔，躲避管道！Tap to fly.',file:'flappy.html',tags:['动作','Action']},
+    {name:'井字棋 Tic-Tac-Toe',icon:'❌',cat:'board',desc:'三子连线，挑战AI！Play vs computer.',file:'tictactoe.html',tags:['棋牌','Board']},
+    {name:'拼图 Puzzle',icon:'🧩',cat:'puzzle',desc:'数字拼图，还原顺序！Slide number puzzle.',file:'slide-puzzle.html',tags:['益智','Puzzle']},
+    {name:'弹球 Pong',icon:'🏓',cat:'action',desc:'经典弹球对战！Classic Pong game.',file:'pong.html',tags:['动作','Action']},
+    {name:'颜色反应 Color',icon:'🎨',cat:'casual',desc:'测试你的反应速度！Test reaction time.',file:'color-reaction.html',tags:['休闲','Casual']},
+    {name:'打字游戏 Typing',icon:'⌨️',cat:'casual',desc:'单词从天而降！Words falling from sky.',file:'typing-game.html',tags:['休闲','Casual']},
+    {name:'数独 Sudoku',icon:'9️⃣',cat:'puzzle',desc:'经典数独挑战！Classic Sudoku puzzle.',file:'sudoku.html',tags:['益智','Puzzle']},
+    {name:'跳跃方块 Jump',icon:'🟩',cat:'action',desc:'控制方块跳跃！Tap to jump over obstacles.',file:'jump.html',tags:['动作','Action']},
+    {name:'猜数字 Guess',icon:'🔮',cat:'casual',desc:'猜1-100之间的数！Guess the number.',file:'guess-number.html',tags:['休闲','Casual']},
+  ];
+  let currentCat='all';
+
+  function renderGames(list){
+    document.getElementById('gameGrid').innerHTML=list.map(g=>`
+      <a href="games/${g.file}" class="game-card">
+        <div class="game-thumb">${g.icon}</div>
+        <div class="game-info">
+          <h3>${g.name}</h3>
+          <p>${g.desc}</p>
+          <div class="game-tags">${g.tags.map(t=>`<span class="game-tag">${t}</span>`).join('')}</div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  function filterCat(cat,el){
+    currentCat=cat;
+    document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    filterGames();
+  }
+
+  function filterGames(){
+    const q=document.getElementById('searchInput').value.toLowerCase();
+    let list=GAMES;
+    if(currentCat!=='all')list=list.filter(g=>g.cat===currentCat);
+    if(q)list=list.filter(g=>g.name.toLowerCase().includes(q)||g.desc.toLowerCase().includes(q));
+    renderGames(list);
+  }
+
+  renderGames(GAMES);
+  </script>
+</body>
+</html>

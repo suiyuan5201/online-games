@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>数字拼图 Slide Puzzle - 免费在线游戏</title>
+  <meta name="description" content="免费在线数字拼图游戏，滑动数字还原顺序。Free online Slide Puzzle game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+  .puzzle-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:320px;margin:0 auto;background:#1e293b;padding:10px;border-radius:12px}
+  .puzzle-tile{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.8em;font-weight:700;border-radius:8px;cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none}
+  .puzzle-tile.num{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+  .puzzle-tile.num:hover{transform:scale(1.05)}
+  .puzzle-tile.empty{background:transparent}
+  .puzzle-tile.correct{background:linear-gradient(135deg,#10b981,#059669)}
+  </style>
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🧩 数字拼图 Slide Puzzle</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">点击数字滑动，还原1-15顺序 | Click tiles to slide into order</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="moves">0</div><div class="label">步数 Moves</div></div>
+        <div class="score-item"><div class="value" id="timer">0s</div><div class="label">用时 Time</div></div>
+        <div class="score-item"><div class="value" id="best">-</div><div class="label">最佳 Best</div></div>
+      </div>
+      <div class="puzzle-grid" id="grid"></div>
+      <div class="game-controls" style="margin-top:15px">
+        <button class="btn" onclick="initGame()">🔄 新游戏</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  let tiles,emptyIdx,moves,timerInterval,seconds,started;
+  const best=localStorage.getItem('puzzle_best');
+  if(best)document.getElementById('best').textContent=best+'步';
+
+  function initGame(){
+    clearInterval(timerInterval);
+    moves=0;seconds=0;started=false;
+    document.getElementById('moves').textContent='0';
+    document.getElementById('timer').textContent='0s';
+    // generate solvable puzzle
+    do{tiles=[...Array(15).keys()].map(i=>i+1);tiles.push(0);shuffle(tiles);}while(!isSolvable(tiles));
+    emptyIdx=tiles.indexOf(0);
+    render();
+  }
+
+  function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
+  function isSolvable(arr){
+    let inv=0;
+    for(let i=0;i<16;i++)for(let j=i+1;j<16;j++)if(arr[i]&&arr[j]&&arr[i]>arr[j])inv++;
+    const emptyRow=Math.floor(arr.indexOf(0)/4);
+    return(inv+(3-emptyRow))%2===0;
+  }
+
+  function render(){
+    document.getElementById('grid').innerHTML=tiles.map((t,i)=>{
+      if(t===0)return'<div class="puzzle-tile empty"></div>';
+      const isCorrect=t===i+1;
+      return`<div class="puzzle-tile num${isCorrect?' correct':''}" onclick="clickTile(${i})">${t}</div>`;
+    }).join('');
+  }
+
+  function clickTile(idx){
+    const row=Math.floor(idx/4),col=idx%4;
+    const eRow=Math.floor(emptyIdx/4),eCol=emptyIdx%4;
+    if((Math.abs(row-eRow)===1&&col===eCol)||(Math.abs(col-eCol)===1&&row===eRow)){
+      if(!started){started=true;timerInterval=setInterval(()=>{seconds++;document.getElementById('timer').textContent=seconds+'s';},1000);}
+      [tiles[idx],tiles[emptyIdx]]=[tiles[emptyIdx],tiles[idx]];
+      emptyIdx=idx;moves++;
+      document.getElementById('moves').textContent=moves;
+      render();
+      checkWin();
+    }
+  }
+
+  function checkWin(){
+    for(let i=0;i<15;i++)if(tiles[i]!==i+1)return;
+    clearInterval(timerInterval);
+    const prevBest=localStorage.getItem('puzzle_best');
+    if(!prevBest||moves<parseInt(prevBest)){localStorage.setItem('puzzle_best',moves);document.getElementById('best').textContent=moves+'步';}
+    setTimeout(()=>alert('🎉 恭喜完成！'+moves+'步，用时'+seconds+'秒'),200);
+  }
+
+  initGame();
+  </script>
+</body>
+</html>

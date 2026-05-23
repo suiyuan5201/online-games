@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://deluxe-cactus-08827a.netlify.app/sitemap.xml

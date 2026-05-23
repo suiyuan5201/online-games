@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>贪吃蛇 Snake - 免费在线游戏</title>
+  <meta name="description" content="免费在线贪吃蛇游戏，经典玩法，键盘或触屏操作。Free online Snake game.">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2030154790924322" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar"><a href="../index.html" class="logo">🎮 游戏合集</a><a href="../index.html" class="nav-link">← 返回</a></nav>
+  <div class="game-page">
+    <h1 style="text-align:center;margin:20px 0 5px">🐍 贪吃蛇 Snake</h1>
+    <p style="text-align:center;color:var(--text-light);font-size:14px;margin-bottom:15px">键盘方向键或滑动屏幕操作 | Arrow keys or swipe to play</p>
+    <div class="game-container">
+      <div class="score-board">
+        <div class="score-item"><div class="value" id="score">0</div><div class="label">得分 Score</div></div>
+        <div class="score-item"><div class="value" id="best">0</div><div class="label">最高 Best</div></div>
+        <div class="score-item"><div class="value" id="speed">5</div><div class="label">速度 Speed</div></div>
+      </div>
+      <canvas id="game" width="400" height="400"></canvas>
+      <div class="game-controls">
+        <button class="btn" id="startBtn" onclick="startGame()">🎮 开始游戏</button>
+        <button class="btn btn-outline" onclick="pauseGame()">⏸ 暂停</button>
+      </div>
+      <div class="mobile-controls">
+        <button class="mobile-btn" onclick="setDir(0,-1)">⬆️</button>
+      </div>
+      <div class="mobile-controls" style="display:flex;gap:40px">
+        <button class="mobile-btn" onclick="setDir(-1,0)">⬅️</button>
+        <button class="mobile-btn" onclick="setDir(0,1)">⬇️</button>
+        <button class="mobile-btn" onclick="setDir(1,0)">➡️</button>
+      </div>
+    </div>
+    <div class="ad-placeholder">广告位 - Google AdSense</div>
+  </div>
+  <footer class="footer">Free Online Games | 免费在线小游戏 © 2024</footer>
+  <script>
+  const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+  const GRID=20,CELL=cv.width/GRID;
+  let snake,food,dir,nextDir,score,gameLoop,paused=false,speed=5;
+  let best=+(localStorage.getItem('snake_best')||0);
+  document.getElementById('best').textContent=best;
+
+  function init(){
+    snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+    dir={x:1,y:0};nextDir={x:1,y:0};
+    score=0;paused=false;speed=5;
+    document.getElementById('score').textContent=0;
+    document.getElementById('speed').textContent=speed;
+    placeFood();draw();
+  }
+
+  function placeFood(){
+    do{food={x:Math.floor(Math.random()*GRID),y:Math.floor(Math.random()*GRID)};}
+    while(snake.some(s=>s.x===food.x&&s.y===food.y));
+  }
+
+  function draw(){
+    ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,cv.width,cv.height);
+    // grid lines
+    ctx.strokeStyle='rgba(255,255,255,.03)';
+    for(let i=0;i<GRID;i++){ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,cv.height);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*CELL);ctx.lineTo(cv.width,i*CELL);ctx.stroke();}
+    // food
+    ctx.fillStyle='#ef4444';
+    ctx.beginPath();ctx.arc(food.x*CELL+CELL/2,food.y*CELL+CELL/2,CELL/2-2,0,Math.PI*2);ctx.fill();
+    // snake
+    snake.forEach((s,i)=>{
+      ctx.fillStyle=i===0?'#10b981':'#34d399';
+      ctx.fillRect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2);
+      if(i===0){ctx.fillStyle='#fff';ctx.fillRect(s.x*CELL+5,s.y*CELL+5,4,4);ctx.fillRect(s.x*CELL+CELL-9,s.y*CELL+5,4,4);}
+    });
+  }
+
+  function update(){
+    if(paused)return;
+    dir=nextDir;
+    const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+    // wall collision
+    if(head.x<0||head.x>=GRID||head.y<0||head.y>=GRID){gameOver();return;}
+    // self collision
+    if(snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return;}
+    snake.unshift(head);
+    if(head.x===food.x&&head.y===food.y){
+      score++;
+      document.getElementById('score').textContent=score;
+      if(score%5===0&&speed<15){speed++;document.getElementById('speed').textContent=speed;clearInterval(gameLoop);gameLoop=setInterval(update,200-speed*10);}
+      placeFood();
+    }else{snake.pop();}
+    draw();
+  }
+
+  function startGame(){
+    clearInterval(gameLoop);
+    init();
+    gameLoop=setInterval(update,200-speed*10);
+    document.getElementById('startBtn').textContent='🔄 重新开始';
+  }
+
+  function pauseGame(){paused=!paused;}
+
+  function gameOver(){
+    clearInterval(gameLoop);
+    if(score>best){best=score;localStorage.setItem('snake_best',best);document.getElementById('best').textContent=best;}
+    ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#fff';ctx.font='bold 28px sans-serif';ctx.textAlign='center';
+    ctx.fillText('Game Over!',cv.width/2,cv.height/2-15);
+    ctx.font='16px sans-serif';ctx.fillText('得分: '+score+'  最高: '+best,cv.width/2,cv.height/2+20);
+  }
+
+  function setDir(x,y){if(dir.x!==-x||dir.y!==-y)nextDir={x,y};}
+
+  document.addEventListener('keydown',e=>{
+    switch(e.key){
+      case'ArrowUp':case'w':case'W':setDir(0,-1);e.preventDefault();break;
+      case'ArrowDown':case's':case'S':setDir(0,1);e.preventDefault();break;
+      case'ArrowLeft':case'a':case'A':setDir(-1,0);e.preventDefault();break;
+      case'ArrowRight':case'd':case'D':setDir(1,0);e.preventDefault();break;
+    }
+  });
+
+  // touch swipe
+  let tx,ty;
+  cv.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;});
+  cv.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>Math.abs(dy)){setDir(dx>0?1:-1,0);}else{setDir(0,dy>0?1:-1);}
+  });
+
+  init();
+  </script>
+</body>
+</html>
